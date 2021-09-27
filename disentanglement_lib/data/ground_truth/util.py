@@ -51,15 +51,15 @@ class SplitDiscreteStateSpace(object):
   def num_latent_factors(self):
     return len(self.latent_factor_indices)
 
-  def sample_latent_factors(self, num, random_state):
+  def sample_latent_factors(self, num, random_state, low=None):
     """Sample a batch of the latent factors."""
     factors = np.zeros(
         shape=(num, len(self.latent_factor_indices)), dtype=np.int64)
     for pos, i in enumerate(self.latent_factor_indices):
-      factors[:, pos] = self._sample_factor(i, num, random_state)
+      factors[:, pos] = self._sample_factor(i, num, random_state, low)
     return factors
 
-  def sample_all_factors(self, latent_factors, random_state, causally=False):
+  def sample_all_factors(self, latent_factors, random_state, causally=False, data_labels=None):
     """Samples the remaining factors based on the latent factors."""
     num_samples = latent_factors.shape[0]
     all_factors = np.zeros(
@@ -68,29 +68,30 @@ class SplitDiscreteStateSpace(object):
     # Complete all the other factors
     for i in self.observation_factor_indices:
       if causally:
-        all_factors[:, i] = self._sample_causally(latent_factors)
+        all_factors[:, i] = self._sample_causally(i, self.latent_factor_indices, latent_factors, data_labels)
       else:
         all_factors[:, i] = self._sample_factor(i, num_samples, random_state)
     return all_factors
 
-  def _sample_factor(self, i, num, random_state):
+  def _sample_factor(self, i, num, random_state, low=None):
+    if low is not None:
+      rnd = low[i] + random_state.randint(self.factor_sizes[i], size=num)
+      equals100 = rnd[rnd==100]
+      while i==1 and equals100.any():
+        # hacking light_pos=100 not present
+        rnd = low[i] + random_state.randint(self.factor_sizes[i], size=num)
+        equals100 = rnd[rnd==100]
+      return rnd
     return random_state.randint(self.factor_sizes[i], size=num)
   
   def _sample_causally(self, id_observed_factor, latent_factors_indeces, latent_factors, data_labels):
     
     # getting the dataset index of samples with required latent factors
-    masks = []
-
-    # for each latent factor we create a mask
-    for id_latent, _ in enumerate(latent_factors_indeces):
-      select_dim = data_labels[:, id_latent]
-      mask = np.where(np.isin(select_dim, latent_factors[:, id_latent]))
-      masks.append(mask)
-    
-    # all the latens should be satisfied
-    indexes = np.logical_and.reduce(masks)
-
-    factor = data_labels[indexes, id_observed_factor]
+    factor = np.zeros(latent_factors.shape[0])
+    for id_sample, sample in enumerate(latent_factors):
+        same = data_labels[:,latent_factors_indeces]==sample[latent_factors_indeces]
+        mask = np.logical_and.reduce(same, axis=1)
+        factor[id_sample] = data_labels[mask, id_observed_factor]
 
     return factor
 

@@ -53,10 +53,10 @@ class Pendulum(ground_truth_data.GroundTruthData):
     n_samples = images.shape[0]
     self.images = (
         images.reshape([n_samples, 96, 96, 3]).astype(np.float32) / 255.)
-    features = labels.reshape([n_samples, 4])
+    self.features = labels.reshape([n_samples, 4])
     self.factor_sizes = [84, 88, 0, 0] #TODO: shade_pos, shade_len
     self.latent_factor_indices = list(range(2))
-    self.num_total_factors = features.shape[1]
+    self.num_total_factors = self.features.shape[1]
     self.state_space = util.SplitDiscreteStateSpace(self.factor_sizes,
                                                     self.latent_factor_indices)
     self.factor_bases = np.prod(self.factor_sizes) / np.cumprod(
@@ -77,17 +77,14 @@ class Pendulum(ground_truth_data.GroundTruthData):
 
   def sample_factors(self, num, random_state):
     """Sample a batch of factors Y."""
-    return self.state_space.sample_latent_factors(num, random_state)
+    return self.state_space.sample_latent_factors(num, random_state, low=[-40, 60, 0, 0])
 
-  def sample_observations_from_factors(self, factors, random_state, causally=True):
-    all_factors = self.state_space.sample_all_factors(factors, random_state)
-    
-    masks = []
-    for id_latent in range(self.num_total_factors):
-      select_dim = data_labels[:, id_latent]
-      mask = np.where(np.isin(select_dim, all_factors[:, id_latent]))
-      masks.append(mask)
-    
-    # all the latens should be satisfied
-    indexes = np.logical_and.reduce(masks)
-    return self.images[indices]
+  def sample_observations_from_factors(self, factors, random_state):
+    all_factors = self.state_space.sample_all_factors(factors, random_state, causally=True, data_labels=self.features)
+    indices = np.zeros(all_factors.shape[0])
+    for id_sample, sample in enumerate(all_factors):
+      same = self.features==sample
+      mask = np.logical_and.reduce(same, axis=1)
+      indices[id_sample] = np.nonzero(mask)[0]
+
+    return self.images[indices.astype(int)]
