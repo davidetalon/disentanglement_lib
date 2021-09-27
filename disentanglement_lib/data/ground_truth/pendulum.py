@@ -32,7 +32,7 @@ PENDULUM_PATH = os.path.join(
 
 
 
-class Shapes3D(ground_truth_data.GroundTruthData):
+class Pendulum(ground_truth_data.GroundTruthData):
   """Pendulum dataset.
 
   The data set was originally introduced in "CausalVAE: Disentangled Representation Learningvia Neural Structural Causal Models".
