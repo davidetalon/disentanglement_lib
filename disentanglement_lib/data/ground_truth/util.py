@@ -59,7 +59,7 @@ class SplitDiscreteStateSpace(object):
       factors[:, pos] = self._sample_factor(i, num, random_state)
     return factors
 
-  def sample_all_factors(self, latent_factors, random_state):
+  def sample_all_factors(self, latent_factors, random_state, causally=False):
     """Samples the remaining factors based on the latent factors."""
     num_samples = latent_factors.shape[0]
     all_factors = np.zeros(
@@ -67,11 +67,32 @@ class SplitDiscreteStateSpace(object):
     all_factors[:, self.latent_factor_indices] = latent_factors
     # Complete all the other factors
     for i in self.observation_factor_indices:
-      all_factors[:, i] = self._sample_factor(i, num_samples, random_state)
+      if causally:
+        all_factors[:, i] = self._sample_causally(latent_factors)
+      else:
+        all_factors[:, i] = self._sample_factor(i, num_samples, random_state)
     return all_factors
 
   def _sample_factor(self, i, num, random_state):
     return random_state.randint(self.factor_sizes[i], size=num)
+  
+  def _sample_causally(self, id_observed_factor, latent_factors_indeces, latent_factors, data_labels):
+    
+    # getting the dataset index of samples with required latent factors
+    masks = []
+
+    # for each latent factor we create a mask
+    for id_latent, _ in enumerate(latent_factors_indeces):
+      select_dim = data_labels[:, id_latent]
+      mask = np.where(np.isin(select_dim, latent_factors[:, id_latent]))
+      masks.append(mask)
+    
+    # all the latens should be satisfied
+    indexes = np.logical_and.reduce(masks)
+
+    factor = data_labels[indexes, id_observed_factor]
+
+    return factor
 
 
 class StateSpaceAtomIndex(object):

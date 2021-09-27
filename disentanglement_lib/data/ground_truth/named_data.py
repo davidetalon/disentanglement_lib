@@ -59,6 +59,8 @@ def get_named_ground_truth_data(name):
     return mpi3d.MPI3D(mode="mpi3d_real")
   elif name == "shapes3d":
     return shapes3d.Shapes3D()
+  elif name == "pendulum":
+    return pendulum.Pendulum()
   elif name == "dummy_data":
     return dummy_data.DummyData()
   else:
