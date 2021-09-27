@@ -47,9 +47,9 @@ class Shapes3D(ground_truth_data.GroundTruthData):
   def __init__(self):
     with h5py.File(PENDULUM_PATH, 'r') as f:
       # Data was saved originally using python2, so we need to set the encoding.
-      data = np.load(f, encoding="latin1")
-    images = data["images"]
-    labels = data["labels"]
+      images = np.array(f.get('images'))
+      labels = np.array(f.get('labels'))
+      
     n_samples = images.shape[0]
     self.images = (
         images.reshape([n_samples, 96, 96, 3]).astype(np.float32) / 255.)
