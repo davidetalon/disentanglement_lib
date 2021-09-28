@@ -53,7 +53,7 @@ class Shapes3D(ground_truth_data.GroundTruthData):
       data = np.load(f, encoding="latin1")
     images = data["images"]
     labels = data["labels"]
-    n_samples = np.prod(images.shape[0:6])
+    n_samples = images.shape[0]
     self.images = (
         images.reshape([n_samples, 64, 64, 3]).astype(np.float32) / 255.)
     features = labels.reshape([n_samples, 6])
