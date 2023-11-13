@@ -66,7 +66,7 @@ setup(
     ],
     extras_require={
         'tf': ['tensorflow==1.14'],
-        'tf_gpu': ['tensorflow-gpu==1.14'],
+        'tf_gpu': ['tensorflow==1.15'],
     },
     classifiers=[
         'Development Status :: 4 - Beta',
