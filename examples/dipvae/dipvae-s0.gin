@@ -13,28 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-dataset.name = "dsprites_full"
+dataset.name = "shapes3d"
 model.batch_size = 64
-# model.model = @dip_vae()
-# dip_vae.lambda_d_factor = 10.
-# dip_vae.lambda_od = 7.5
-# dip_vae.dip_type = "i"
-
-# model.model = @beta_tc_vae()
-# beta_tc_vae.beta = 5
-
-model.model = @factor_vae()
-factor_vae.gamma = 35
-discriminator_optimizer.optimizer_fn = @AdamOptimizer
-discriminator.discriminator_fn = @fc_discriminator
-
+model.model = @dip_vae()
+dip_vae.lambda_d_factor = 10.
+dip_vae.lambda_od = 7.5
+dip_vae.dip_type = "i"
 model.random_seed = 0
-vae.beta = 4
-encoder.num_latent = 10
+encoder.num_latent = 12
 vae_optimizer.optimizer_fn = @AdamOptimizer
 # We train for only 5 steps, in practice we train for 300000 steps.
-model.training_steps = 5
-model.random_seed=0
+model.training_steps = 300000
 AdamOptimizer.beta1 = 0.9
 AdamOptimizer.beta2 = 0.999
 AdamOptimizer.epsilon = 1e-08
